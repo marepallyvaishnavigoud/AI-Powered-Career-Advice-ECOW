@@ -476,7 +476,7 @@ themeToggle.addEventListener("click", () => {
     localStorage.setItem("theme", "dark");
   }
 });
-// --- Smarter Chatbot with Career Questions ---
+// Chatbot with Career Questions
 const chatbotKnowledge = {
   greetings: ["hello", "hi", "hey"],
   farewells: ["bye", "goodbye"],
@@ -522,7 +522,7 @@ const careerQuestions = [
 let currentStep = 0;
 let userName = "";
 
-// ===== Core Functions =====
+// Core Functions
 function generateAIResponse(message) {
   const lowerMessage = message.toLowerCase();
 
@@ -1267,7 +1267,7 @@ function updateUserInStorage() {
   }
 }
 
-// --- Resume Builder Functions ---
+// Resume Builder Functions
 function addExperience(isExample = false) {
   const container = document.getElementById("experience-container");
   const item = document.createElement("div");
@@ -1417,9 +1417,8 @@ function downloadResume() {
     }
   });
 }
-// --- End Resume Builder ---
 
-// --- New Modal & Job Search Functions ---
+// Modal & Job Search Functions
 const dummyJobs = [
   {
     title: "Junior Data Scientist",
@@ -1497,7 +1496,6 @@ function simulateJobSearch(query) {
   );
   displayJobs(filteredJobs);
 }
-// --- End New Modal Functions ---
 
 // Utility Functions
 function debounce(func, wait) {
@@ -1514,12 +1512,11 @@ function debounce(func, wait) {
 const debouncedSearch = debounce(searchCareers, 300);
 const debouncedJobSearch = debounce(simulateJobSearch, 300);
 
-// ---Start Dynamic Copyright
-function setDynamicCopyright(companyName){
+// Dynamic Copyright
+function setDynamicCopyright(companyName) {
   const currYear = new Date().getFullYear();
-  document.getElementById("copyright").textContent=`© ${currYear} ${companyName}. All rights reserved.`;
+  document.getElementById("copyright").textContent = `© ${currYear} ${companyName}. All rights reserved.`;
 }
-//----End Dynamic Copyright----
 
 // Global Access
 window.showPage = showPage;
@@ -1553,9 +1550,9 @@ window.downloadResume = downloadResume;
 window.enrollInCourse = enrollInCourse;
 window.unEnrollCourse = unEnrollCourse;
 window.handleGetStartedClick = handleGetStartedClick;
-window.setDynamicCopyright=setDynamicCopyright('AI Career Advisor');
+setDynamicCopyright('AI Career Advisor');
 
-// ===== TESTIMONIALS FUNCTIONALITY =====
+// TESTIMONIALS FUNCTIONALITY
 
 // Initialize testimonials system
 function initializeTestimonials() {
@@ -1666,7 +1663,6 @@ async function handleTestimonialSubmit(e) {
     }
     
   } catch (error) {
-    console.error('Error submitting testimonial:', error);
     alert('Error submitting testimonial. Please try again.');
   } finally {
     submitBtn.textContent = originalText;
@@ -1809,7 +1805,6 @@ async function loadTestimonials() {
     `).join('');
     
   } catch (error) {
-    console.error('Error loading testimonials:', error);
     loadingEl?.classList.add('hidden');
     gridEl.innerHTML = '<p class="text-center">Error loading testimonials. Please try again later.</p>';
   }
@@ -1845,7 +1840,6 @@ function approveTestimonial(testimonialId) {
       loadTestimonials();
     })
     .catch(error => {
-      console.error('Error approving testimonial:', error);
       alert('Error approving testimonial');
     });
 }
@@ -1863,7 +1857,6 @@ function rejectTestimonial(testimonialId) {
         loadTestimonials();
       })
       .catch(error => {
-        console.error('Error deleting testimonial:', error);
         alert('Error deleting testimonial');
       });
   }
