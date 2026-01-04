@@ -1,3 +1,53 @@
+// Firebase Configuration (Mock - Replace with actual Firebase config)
+const firebaseConfig = {
+  // This would be your actual Firebase config
+  // For demo purposes, we'll use localStorage as a mock database
+};
+
+// Mock Firebase Firestore functions
+const mockFirestore = {
+  collection: (name) => ({
+    add: (data) => {
+      const items = JSON.parse(localStorage.getItem(name) || '[]');
+      const newItem = { ...data, id: Date.now().toString() };
+      items.push(newItem);
+      localStorage.setItem(name, JSON.stringify(items));
+      return Promise.resolve({ id: newItem.id });
+    },
+    where: (field, operator, value) => ({
+      get: () => {
+        const items = JSON.parse(localStorage.getItem(name) || '[]');
+        const filtered = items.filter(item => {
+          if (operator === '==') return item[field] === value;
+          return false;
+        });
+        return Promise.resolve({ docs: filtered.map(item => ({ id: item.id, data: () => item })) });
+      }
+    }),
+    get: () => {
+      const items = JSON.parse(localStorage.getItem(name) || '[]');
+      return Promise.resolve({ docs: items.map(item => ({ id: item.id, data: () => item })) });
+    },
+    doc: (id) => ({
+      update: (data) => {
+        const items = JSON.parse(localStorage.getItem(name) || '[]');
+        const index = items.findIndex(item => item.id === id);
+        if (index !== -1) {
+          items[index] = { ...items[index], ...data };
+          localStorage.setItem(name, JSON.stringify(items));
+        }
+        return Promise.resolve();
+      },
+      delete: () => {
+        const items = JSON.parse(localStorage.getItem(name) || '[]');
+        const filtered = items.filter(item => item.id !== id);
+        localStorage.setItem(name, JSON.stringify(filtered));
+        return Promise.resolve();
+      }
+    })
+  })
+};
+
 // Application Data
 const appData = {
   careers: [
@@ -386,6 +436,8 @@ document.addEventListener("DOMContentLoaded", function () {
   addEducation(true); // Add initial example
   // Initialize form validation for profile setup
   setupProfileFormValidation();
+  // Initialize testimonials
+  initializeTestimonials();
 
   // Set initial form validation state if profile page exists
   if (document.getElementById("profile-setup-page")) {
@@ -553,6 +605,10 @@ function showPage(pageName) {
       case "assessment":
         resetAssessment();
         loadQuestion();
+        break;
+      case "testimonials":
+        loadTestimonials();
+        updateTestimonialsAuthUI();
         break;
     }
   }
@@ -1498,3 +1554,329 @@ window.enrollInCourse = enrollInCourse;
 window.unEnrollCourse = unEnrollCourse;
 window.handleGetStartedClick = handleGetStartedClick;
 window.setDynamicCopyright=setDynamicCopyright('AI Career Advisor');
+
+// ===== TESTIMONIALS FUNCTIONALITY =====
+
+// Initialize testimonials system
+function initializeTestimonials() {
+  setupTestimonialForm();
+  // Add some sample testimonials if none exist
+  const existing = JSON.parse(localStorage.getItem('testimonials') || '[]');
+  if (existing.length === 0) {
+    addSampleTestimonials();
+  }
+}
+
+// Add sample testimonials for demo
+function addSampleTestimonials() {
+  const samples = [
+    {
+      id: '1',
+      name: 'Priya Sharma',
+      careerPath: 'From Mechanical Engineering to Data Science',
+      skillsGained: 'Python, Machine Learning, SQL, Data Visualization',
+      message: 'AI Career Advisor helped me transition from mechanical engineering to data science. The personalized roadmap and skill recommendations were incredibly valuable!',
+      userId: 'sample1',
+      userEmail: 'priya@example.com',
+      submittedAt: new Date('2024-01-15').toISOString(),
+      approved: true,
+      approvedAt: new Date('2024-01-16').toISOString()
+    },
+    {
+      id: '2', 
+      name: 'Rahul Kumar',
+      careerPath: 'From Marketing to UX Design',
+      skillsGained: 'Figma, User Research, Prototyping, Design Thinking',
+      message: 'The AI mentor guided me through my career change journey. The community support and learning resources made all the difference!',
+      userId: 'sample2',
+      userEmail: 'rahul@example.com',
+      submittedAt: new Date('2024-01-20').toISOString(),
+      approved: true,
+      approvedAt: new Date('2024-01-21').toISOString()
+    }
+  ];
+  localStorage.setItem('testimonials', JSON.stringify(samples));
+}
+
+// Setup testimonial form validation and submission
+function setupTestimonialForm() {
+  const form = document.getElementById('testimonial-form');
+  if (form) {
+    form.addEventListener('submit', handleTestimonialSubmit);
+    
+    // Add real-time validation
+    const fields = ['testimonial-name', 'testimonial-career', 'testimonial-skills', 'testimonial-message'];
+    fields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('blur', () => validateTestimonialField(fieldId));
+        field.addEventListener('input', () => clearTestimonialError(fieldId));
+      }
+    });
+  }
+}
+
+// Handle testimonial form submission
+async function handleTestimonialSubmit(e) {
+  e.preventDefault();
+  
+  if (!currentUser) {
+    alert('Please log in to submit a testimonial.');
+    showPage('auth');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submit-testimonial-btn');
+  const originalText = submitBtn.textContent;
+  
+  try {
+    // Validate all fields
+    if (!validateTestimonialForm()) {
+      return;
+    }
+
+    submitBtn.textContent = 'Submitting...';
+    submitBtn.disabled = true;
+
+    const testimonialData = {
+      name: document.getElementById('testimonial-name').value.trim(),
+      careerPath: document.getElementById('testimonial-career').value.trim(),
+      skillsGained: document.getElementById('testimonial-skills').value.trim(),
+      message: document.getElementById('testimonial-message').value.trim(),
+      userId: currentUser.id.toString(),
+      userEmail: currentUser.email,
+      submittedAt: new Date().toISOString(),
+      approved: false,
+      approvedAt: null
+    };
+
+    // Submit to mock Firestore
+    await mockFirestore.collection('testimonials').add(testimonialData);
+    
+    // Show success message
+    alert('Thank you! Your testimonial has been submitted and is pending approval.');
+    
+    // Reset form and close modal
+    document.getElementById('testimonial-form').reset();
+    closeModal('testimonial-modal');
+    
+    // Reload testimonials if on testimonials page
+    if (currentPage === 'testimonials') {
+      loadTestimonials();
+    }
+    
+  } catch (error) {
+    console.error('Error submitting testimonial:', error);
+    alert('Error submitting testimonial. Please try again.');
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+  }
+}
+
+// Validate individual testimonial field
+function validateTestimonialField(fieldId) {
+  const field = document.getElementById(fieldId);
+  const value = field.value.trim();
+  const errorId = fieldId.replace('testimonial-', '') + '-error';
+  
+  let isValid = true;
+  let errorMessage = '';
+
+  switch (fieldId) {
+    case 'testimonial-name':
+      if (!value) {
+        errorMessage = 'Name is required';
+        isValid = false;
+      } else if (value.length < 2) {
+        errorMessage = 'Name must be at least 2 characters';
+        isValid = false;
+      }
+      break;
+    case 'testimonial-career':
+      if (!value) {
+        errorMessage = 'Career path is required';
+        isValid = false;
+      } else if (value.length < 5) {
+        errorMessage = 'Please provide more details about your career path';
+        isValid = false;
+      }
+      break;
+    case 'testimonial-skills':
+      if (!value) {
+        errorMessage = 'Skills gained is required';
+        isValid = false;
+      } else if (value.length < 3) {
+        errorMessage = 'Please list the skills you gained';
+        isValid = false;
+      }
+      break;
+    case 'testimonial-message':
+      if (!value) {
+        errorMessage = 'Testimonial message is required';
+        isValid = false;
+      } else if (value.length < 20) {
+        errorMessage = 'Please provide a more detailed testimonial (at least 20 characters)';
+        isValid = false;
+      }
+      break;
+  }
+
+  if (!isValid) {
+    showTestimonialError(errorId, errorMessage);
+    field.classList.add('error');
+  } else {
+    clearTestimonialError(fieldId);
+    field.classList.remove('error');
+  }
+
+  return isValid;
+}
+
+// Validate entire testimonial form
+function validateTestimonialForm() {
+  const fields = ['testimonial-name', 'testimonial-career', 'testimonial-skills', 'testimonial-message'];
+  let allValid = true;
+  
+  fields.forEach(fieldId => {
+    if (!validateTestimonialField(fieldId)) {
+      allValid = false;
+    }
+  });
+  
+  return allValid;
+}
+
+// Show testimonial validation error
+function showTestimonialError(errorId, message) {
+  const errorEl = document.getElementById(errorId);
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+}
+
+// Clear testimonial validation error
+function clearTestimonialError(fieldId) {
+  const errorId = fieldId.replace('testimonial-', '') + '-error';
+  const errorEl = document.getElementById(errorId);
+  if (errorEl) {
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+  }
+}
+
+// Load and display testimonials
+async function loadTestimonials() {
+  const loadingEl = document.getElementById('testimonials-loading');
+  const gridEl = document.getElementById('testimonials-grid');
+  const noTestimonialsEl = document.getElementById('no-testimonials');
+  
+  if (!gridEl) return;
+  
+  try {
+    loadingEl?.classList.remove('hidden');
+    gridEl.innerHTML = '';
+    noTestimonialsEl?.classList.add('hidden');
+    
+    // Get approved testimonials only
+    const snapshot = await mockFirestore.collection('testimonials').where('approved', '==', true).get();
+    const testimonials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    loadingEl?.classList.add('hidden');
+    
+    if (testimonials.length === 0) {
+      noTestimonialsEl?.classList.remove('hidden');
+      return;
+    }
+    
+    // Sort by approval date (newest first)
+    testimonials.sort((a, b) => new Date(b.approvedAt) - new Date(a.approvedAt));
+    
+    gridEl.innerHTML = testimonials.map(testimonial => `
+      <div class="testimonial-card">
+        <div class="testimonial-content">
+          <p>"${escapeHtml(testimonial.message)}"</p>
+        </div>
+        <div class="testimonial-author">
+          <strong>${escapeHtml(testimonial.name)}</strong>
+          <span>${escapeHtml(testimonial.careerPath)}</span>
+          <div class="testimonial-skills">
+            <small><strong>Skills Gained:</strong> ${escapeHtml(testimonial.skillsGained)}</small>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('Error loading testimonials:', error);
+    loadingEl?.classList.add('hidden');
+    gridEl.innerHTML = '<p class="text-center">Error loading testimonials. Please try again later.</p>';
+  }
+}
+
+// Update testimonials page auth UI
+function updateTestimonialsAuthUI() {
+  const authActions = document.getElementById('auth-only-actions');
+  if (authActions) {
+    if (currentUser) {
+      authActions.classList.remove('hidden');
+    } else {
+      authActions.classList.add('hidden');
+    }
+  }
+}
+
+// Admin functions for testimonial approval (basic implementation)
+function approveTestimonial(testimonialId) {
+  if (!currentUser || currentUser.email !== 'admin@example.com') {
+    alert('Admin access required');
+    return;
+  }
+  
+  const updateData = {
+    approved: true,
+    approvedAt: new Date().toISOString()
+  };
+  
+  mockFirestore.collection('testimonials').doc(testimonialId).update(updateData)
+    .then(() => {
+      alert('Testimonial approved successfully!');
+      loadTestimonials();
+    })
+    .catch(error => {
+      console.error('Error approving testimonial:', error);
+      alert('Error approving testimonial');
+    });
+}
+
+function rejectTestimonial(testimonialId) {
+  if (!currentUser || currentUser.email !== 'admin@example.com') {
+    alert('Admin access required');
+    return;
+  }
+  
+  if (confirm('Are you sure you want to delete this testimonial?')) {
+    mockFirestore.collection('testimonials').doc(testimonialId).delete()
+      .then(() => {
+        alert('Testimonial deleted successfully!');
+        loadTestimonials();
+      })
+      .catch(error => {
+        console.error('Error deleting testimonial:', error);
+        alert('Error deleting testimonial');
+      });
+  }
+}
+
+// Utility function to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Add testimonials functions to global scope
+window.loadTestimonials = loadTestimonials;
+window.approveTestimonial = approveTestimonial;
+window.rejectTestimonial = rejectTestimonial;

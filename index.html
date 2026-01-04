@@ -25,6 +25,7 @@
                 <a href="#" class="nav-link" onclick="showPage('careers')">Explore Careers</a>
                 <a href="#" class="nav-link" onclick="showPage('learning')">Learning Hub</a>
                 <a href="#" class="nav-link" onclick="showPage('community')">Community</a>
+                <a href="#" class="nav-link" onclick="showPage('testimonials')">Testimonials</a>
                 <a href="#" id="dashboard-link" class="nav-link hidden" onclick="showPage('dashboard')">Dashboard</a>
                 <button id="auth-button" class="btn btn--primary" onclick="handleGetStartedClick()">Get Started</button>
                 <button class="theme-toggle" id="theme-toggle">
@@ -150,6 +151,9 @@
                             <span>UX Designer at Flipkart</span>
                         </div>
                     </div>
+                </div>
+                <div class="text-center" style="margin-top: 32px;">
+                    <button class="btn btn--outline" onclick="showPage('testimonials')">View All Success Stories</button>
                 </div>
             </div>
         </section>
@@ -614,6 +618,66 @@
         </div>
     </div>
 
+    <div id="testimonials-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h2>Success Stories</h2>
+                <p>Hear from professionals who transformed their careers with AI Career Advisor</p>
+                <div id="auth-only-actions" class="hidden">
+                    <button class="btn btn--primary" onclick="openModal('testimonial-modal')">Share Your Story</button>
+                </div>
+            </div>
+
+            <div id="testimonials-loading" class="text-center hidden">
+                <p>Loading testimonials...</p>
+            </div>
+
+            <div id="testimonials-grid" class="testimonials-grid">
+                <!-- Testimonials will be loaded here -->
+            </div>
+
+            <div id="no-testimonials" class="text-center hidden">
+                <p>No testimonials available yet. Be the first to share your success story!</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="testimonial-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Your Success Story</h3>
+                <button class="modal-close" onclick="closeModal('testimonial-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="testimonial-form">
+                    <div class="form-group">
+                        <label class="form-label">Your Name *</label>
+                        <input type="text" class="form-control" id="testimonial-name" placeholder="Enter your full name" required>
+                        <div id="name-error" class="validation-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Career Path/Transition *</label>
+                        <input type="text" class="form-control" id="testimonial-career" placeholder="e.g., From Marketing to Data Science" required>
+                        <div id="career-error" class="validation-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Skills Gained *</label>
+                        <input type="text" class="form-control" id="testimonial-skills" placeholder="e.g., Python, Machine Learning, SQL" required>
+                        <div id="skills-testimonial-error" class="validation-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Your Testimonial Message *</label>
+                        <textarea class="form-control" id="testimonial-message" rows="4" placeholder="Share your experience and how AI Career Advisor helped you..." required></textarea>
+                        <div id="message-error" class="validation-error"></div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn--primary" id="submit-testimonial-btn">Submit Testimonial</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="resume-page" class="page">
         <div class="container">
             <div class="page-header">
@@ -739,6 +803,7 @@
                     <a href="#" onclick="showPage('careers')">Explore Careers</a>
                     <a href="#" onclick="showPage('learning')">Learning Hub</a>
                     <a href="#" onclick="showPage('community')">Community</a>
+                    <a href="#" onclick="showPage('testimonials')">Testimonials</a>
                 </div>
                 <div class="footer-section">
                     <h5>Resources</h5>
